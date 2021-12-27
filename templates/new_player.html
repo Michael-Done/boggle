@@ -1,0 +1,12 @@
+<html>
+    <head>
+        <script type = "text/javascript" 
+            src = "{{ url_for('static', filename = 'new_player.js') }}" ></script>
+    </head>
+    <body>
+        <form method = "post">
+            <input type="text" name="player_name" id="player_name_field" onkeyup="format_input()">
+            <p><input type = "submit" value = "Join" /></p>
+        </form>
+    </body>
+</html>

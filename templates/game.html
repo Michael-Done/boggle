@@ -1,0 +1,19 @@
+<html>
+    <head>
+        <script type = "text/javascript" 
+            src = "{{ url_for('static', filename = 'game.js') }}" ></script>
+    </head>
+    <body>
+        <form action = "/" method = "post">
+            <ul>
+            {% for p in players: %}
+                {% if p == player: %}
+                    <li><b>{{ p }}</b></li>
+                {% else: %}
+                    <li>{{ p }}</li>
+                {% endif %}
+            {% endfor %}
+            </ul>
+        </form>
+    </body>
+</html>
