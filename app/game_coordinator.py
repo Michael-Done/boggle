@@ -1,5 +1,6 @@
 # game_coordinator.py
 import random
+from datetime import datetime
 from .game import *
 
 class GameCoordinator:
@@ -15,6 +16,12 @@ class GameCoordinator:
         self.game_list[new_game_id] = Game(new_game_id)
         print(self.game_list)
         return new_game_id
+
+    def flush_inactive_games(self):
+        for g in dict(self.game_list).keys():
+            age_seconds = (datetime.now() - self.game_list[g].time_touched).total_seconds()
+            if age_seconds > GAME_TIMEOUT:
+                self.game_list.pop(g)
 
     @staticmethod
     def __generate_game_id():

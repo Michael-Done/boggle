@@ -1,19 +1,20 @@
 <html>
     <head>
-        <script type = "text/javascript" 
-            src = "{{ url_for('static', filename = 'game.js') }}" ></script>
+        <script type = "text/javascript">
+            let player_name = "{{ player }}";
+            let game_id = "{{ game_id }}";
+        </script>
+        <script type = "text/javascript" src = "{{ url_for('static', filename = 'game.js') }}" ></script>
     </head>
     <body>
-        <form action = "/" method = "post">
-            <ul>
-            {% for p in players: %}
-                {% if p == player: %}
-                    <li><b>{{ p }}</b></li>
-                {% else: %}
-                    <li>{{ p }}</li>
-                {% endif %}
-            {% endfor %}
-            </ul>
-        </form>
+        <ul>
+        {% for p in players: %}
+            {% if p == player: %}
+                <li><b>{{ p }}</b></li>
+            {% else: %}
+                <li>{{ p }}</li>
+            {% endif %}
+        {% endfor %}
+        </ul>
     </body>
 </html>
