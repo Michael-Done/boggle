@@ -47,6 +47,17 @@ def game_new_player(game_id):
    else:
       return redirect('/' + str(game_id))
 
+@server_app.route('/<game_id>/start_game', methods=['POST'])
+def game_start(game_id):
+   if game_id in coordinator.game_list:
+      game_instance = coordinator.game_list[game_id]
+      if 'round_timer' in request.form:
+         game_instance.round_timer = int(request.form['round_timer'])
+      game_instance.new_round()
+      return jsonify({'board': game_instance.board}), 200
+   return Response(), 200
+
+
 @server_app.route('/status', methods=['POST'])
 def status_receive():
    # TODO change the game status to web socket

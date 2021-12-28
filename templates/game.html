@@ -1,20 +1,31 @@
 <html>
     <head>
+        <link rel="stylesheet" href="{{ url_for('static', filename = 'stylesheets/game.css') }}">
         <script type = "text/javascript">
             let player_name = "{{ player }}";
             let game_id = "{{ game_id }}";
         </script>
-        <script type = "text/javascript" src = "{{ url_for('static', filename = 'game.js') }}" ></script>
+        <script type = "text/javascript" src = "{{ url_for('static', filename = 'script/game.js') }}" ></script>
     </head>
     <body>
+        <table>
+            {% for row in range(0,4): %}
+                <tr>
+                    {% for col in range(0,4) %}
+                        <th id="{{row}},{{col}}"></th>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </table> 
         <ul id='player_list'>
-        {% for p in players: %}
-            {% if p == player: %}
-                <li><b>{{ p }}</b></li>
-            {% else: %}
-                <li>{{ p }}</li>
-            {% endif %}
-        {% endfor %}
+            {% for p in players: %}
+                {% if p == player: %}
+                    <li><b>{{ p }}</b></li>
+                {% else: %}
+                    <li>{{ p }}</li>
+                {% endif %}
+            {% endfor %}
         </ul>
     </body>
+    <button onclick="startGame();">START</button>
 </html>
