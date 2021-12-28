@@ -25,8 +25,8 @@ def game_view(game_id):
       return redirect('/')
    elif PNAME_KEY in session:
       if session[PNAME_KEY] in coordinator.game_list[game_id].player_list:
-         return render_template('game.html', game_id=game_id, player=session[PNAME_KEY],
-                                 players=coordinator.game_list[game_id].player_list.keys())
+         players = coordinator.game_list[game_id].player_list.keys()
+         return render_template('game.html', game_id=game_id, player=session[PNAME_KEY], players=players)
       else:
          session.pop(PNAME_KEY)
          coordinator.game_list[game_id].touch()
@@ -49,12 +49,14 @@ def game_new_player(game_id):
 
 @server_app.route('/status', methods=['POST'])
 def status_receive():
+   # TODO change the game status to web socket
    data = request.get_json()
    if 'game_id' in data and data['game_id'] in coordinator.game_list:
       game_instance = coordinator.game_list[data['game_id']]
       game_instance.touch()
       if 'player_name' in data and data['player_name'] in game_instance.player_list:
          game_instance.player_list[data['player_name']].touch()
+         return jsonify(game_instance.get_state()), 200
    return Response(), 200
 
 if __name__ == '__main__':

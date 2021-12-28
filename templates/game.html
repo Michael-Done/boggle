@@ -7,7 +7,7 @@
         <script type = "text/javascript" src = "{{ url_for('static', filename = 'game.js') }}" ></script>
     </head>
     <body>
-        <ul>
+        <ul id='player_list'>
         {% for p in players: %}
             {% if p == player: %}
                 <li><b>{{ p }}</b></li>
