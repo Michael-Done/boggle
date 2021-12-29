@@ -1,5 +1,6 @@
 <html>
     <head>
+        <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.6/build/pure-min.css" integrity="sha384-Uu6IeWbM+gzNVXJcM9XV3SohHtmWE+3VGi496jvgX1jyvDTXfdK+rfZc8C1Aehk5" crossorigin="anonymous">
         <link rel="stylesheet" href="{{ url_for('static', filename = 'stylesheets/game.css') }}">
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.0/socket.io.min.js"></script>
@@ -12,21 +13,38 @@
         <script type = "text/javascript" src = "{{ url_for('static', filename = 'script/game.js') }}" ></script>
     </head>
     <body>
-        <div class='game_area'>
-            <table>
-                <tbody id='game_board'></tbody>
-            </table> 
-        </div>
-        
-        <ul id='player_list'>
-            {% for p in players: %}
-                {% if p == player: %}
-                    <li><b>{{ p }}</b></li>
-                {% else: %}
-                    <li>{{ p }}</li>
-                {% endif %}
-            {% endfor %}
-        </ul>
+        <table id='game_area' class='game_area'> <tr>
+            <td>
+                <div id='left_area' class='left_area'>
+                    <div id='settings_area'>
+
+                    </div>
+                    <div id='player_list_area'>
+                        <h3>Players:</h3>
+                        <ul id='player_list'>
+                            {% for p in players: %}
+                                {% if p == player: %}
+                                    <li><b>{{ p }}</b></li>
+                                {% else: %}
+                                    <li>{{ p }}</li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <div id='board_area' class='board_area'>
+                    <table class='game_board'>
+                        <tbody id='game_board'></tbody>
+                    </table> 
+                </div>
+            </td>
+            <td>
+                <div id='right_area' class='right_area'>
+                    <button class='pure-button' onclick="startGame();">START</button>
+                </div>
+            </td>
+        </tr></table>
     </body>
-    <button onclick="startGame();">START</button>
 </html>

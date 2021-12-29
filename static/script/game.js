@@ -26,10 +26,10 @@ ws.on('game_board', grid => {
     board_tbody.innerHTML = ""
     for(let row in grid) {
         let tr = board_tbody.insertRow();
+        tr.className = 'board_row'
         for(let col in grid[row]) {
-            // square = document.getElementById(String(row) + ',' + String(col));
-            // square.innerHTML = grid[row][col];
             let cell = tr.insertCell();
+            cell.className = 'board_cell'
             cell.innerHTML = grid[row][col];
         }
     }

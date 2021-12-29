@@ -67,6 +67,7 @@ def game_new_player(game_id):
       if player in game_instance.player_list:
          return render_template('new_player.html', msg=(str(player) + ' is already in this game'))
 
+      game_instance.touch()
       p = game_instance.add_player(player)
       session[PNAME_KEY] = p.name
       session[GAMEID_KEY] = game_id
@@ -84,6 +85,7 @@ def on_connect(param):
       return
    
    game_instance = coordinator.game_list[game_id]
+   game_instance.touch()
 
    if player not in game_instance.player_list:
       print('Error, player', player, 'is not in game', game_id)
@@ -128,7 +130,7 @@ def start_game(game_settings):
 
    game_instance = coordinator.game_list[game_id]
    game_instance.new_round()
-   server_socket.emit('game_board', game_instance.board)
+   server_socket.emit('game_board', game_instance.board, to=game_id)
 
 
 if __name__ == '__main__':
