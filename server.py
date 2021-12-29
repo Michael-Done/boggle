@@ -1,13 +1,18 @@
 from flask import Flask, render_template, url_for, request, redirect, jsonify, session, Response
+from flask_socketio import SocketIO, emit, send, join_room, leave_room
 from flask.wrappers import Response
 from app import *
 
 server_app = Flask(__name__)
 server_app.secret_key = "snmdlepijsnechs"
 
+server_socket = SocketIO(server_app)
+
 coordinator = GameCoordinator()
 PNAME_KEY = 'player_name'
+GAMEID_KEY = 'game_id'
 
+## HTTP server handlers
 @server_app.route('/', methods=['GET'])
 def root_home():
    coordinator.flush_inactive_games()
@@ -23,52 +28,108 @@ def root_new():
 def game_view(game_id):
    if game_id not in coordinator.game_list:
       return redirect('/')
-   elif PNAME_KEY in session:
-      if session[PNAME_KEY] in coordinator.game_list[game_id].player_list:
-         players = coordinator.game_list[game_id].player_list.keys()
-         return render_template('game.html', game_id=game_id, player=session[PNAME_KEY], players=players)
-      else:
-         session.pop(PNAME_KEY)
-         coordinator.game_list[game_id].touch()
-         return render_template('new_player.html')
-   else:
-      coordinator.game_list[game_id].touch()
-      return render_template('new_player.html')
 
-@server_app.route('/<game_id>', methods=['POST'])
+   if PNAME_KEY not in session:
+      return redirect('/' + str(game_id) + '/new_player')
+   if GAMEID_KEY not in session and session[GAMEID_KEY] != game_id:
+      return redirect('/' + str(game_id) + '/new_player')
+
+   player = session[PNAME_KEY]
+   game_instance = coordinator.game_list[game_id]
+
+   if player not in game_instance.player_list:
+      game_instance.add_player(player)
+      session[PNAME_KEY] = player
+      session[GAMEID_KEY] = game_id
+
+   game_instance.touch()
+   players = list(game_instance.player_list.keys())
+   return render_template('game.html', game_id=game_id, player=player, players=players)
+
+
+@server_app.route('/<game_id>/new_player', methods=['GET','POST'])
 def game_new_player(game_id):
-   if 'player_name' in request.form and game_id in coordinator.game_list:
-      p = coordinator.game_list[game_id].add_player(request.form['player_name'])
-      if p == None:
-         return "Player already exists"
-      else:
-         session[PNAME_KEY] = p.name
-         return redirect('/' + str(game_id))
-   else:
+   if game_id not in coordinator.game_list:
+      return redirect('/')
+
+   game_instance = coordinator.game_list[game_id]
+
+   if request.method == 'GET':
+      game_instance.touch()
+      return render_template('new_player.html', msg='')
+
+   if request.method == 'POST':
+      if 'player_name' not in request.form:
+         return "\"player_name\" must be submitted to create a new player", 500
+
+      player = request.form['player_name']
+
+      if player in game_instance.player_list:
+         return render_template('new_player.html', msg=(str(player) + ' is already in this game'))
+
+      p = game_instance.add_player(player)
+      session[PNAME_KEY] = p.name
+      session[GAMEID_KEY] = game_id
       return redirect('/' + str(game_id))
 
-@server_app.route('/<game_id>/start_game', methods=['POST'])
-def game_start(game_id):
-   if game_id in coordinator.game_list:
-      game_instance = coordinator.game_list[game_id]
-      if 'round_timer' in request.form:
-         game_instance.round_timer = int(request.form['round_timer'])
-      game_instance.new_round()
-      return jsonify({'board': game_instance.board}), 200
-   return Response(), 200
+## Socket game event handlers
+@server_socket.on('connect')
+def on_connect(param):
+   game_id = session[GAMEID_KEY]
+   player = session[PNAME_KEY]
 
+   if game_id not in coordinator.game_list:
+      print('Error, game', game_id, 'does not exits')
+      send('Error, game ' + game_id + ' does not exits')
+      return
+   
+   game_instance = coordinator.game_list[game_id]
 
-@server_app.route('/status', methods=['POST'])
-def status_receive():
-   # TODO change the game status to web socket
-   data = request.get_json()
-   if 'game_id' in data and data['game_id'] in coordinator.game_list:
-      game_instance = coordinator.game_list[data['game_id']]
-      game_instance.touch()
-      if 'player_name' in data and data['player_name'] in game_instance.player_list:
-         game_instance.player_list[data['player_name']].touch()
-         return jsonify(game_instance.get_state()), 200
-   return Response(), 200
+   if player not in game_instance.player_list:
+      print('Error, player', player, 'is not in game', game_id)
+      send('Error, player ' + player + ' is not in game ' + game_id)
+      return
+
+   join_room(game_id)
+   server_socket.emit('player_list', list(game_instance.player_list.keys()), to=game_id)
+   print('Player', player, 'connected to', game_id)
+
+@server_socket.on('disconnect')
+def on_disconnect():
+   game_id = session[GAMEID_KEY]
+   player = session[PNAME_KEY]
+
+   if game_id not in coordinator.game_list:
+      print('Error, game', game_id, 'does not exits')
+      send('Error, game ' + game_id + ' does not exits')
+      return
+   
+   game_instance = coordinator.game_list[game_id]
+
+   if player not in game_instance.player_list:
+      print('Error, player', player, 'is not in game', game_id)
+      send('Error, player ' + player + ' is not in game ' + game_id)
+      return
+
+   game_instance.player_list.pop(player)
+   leave_room(game_id)
+   server_socket.emit('player_list', list(game_instance.player_list.keys()), to=game_id)
+   print("Player", player, "disconnected from", game_id)
+
+@server_socket.on('start_game')
+def start_game(game_settings):
+   player = session[PNAME_KEY]
+   game_id = session[GAMEID_KEY]
+
+   if game_id not in coordinator.game_list:
+      print('Error, game', game_id, 'does not exits')
+      send('Error, game ' + game_id + ' does not exits')
+      return
+
+   game_instance = coordinator.game_list[game_id]
+   game_instance.new_round()
+   server_socket.emit('game_board', game_instance.board)
+
 
 if __name__ == '__main__':
-   server_app.run(debug=True)
+   server_socket.run(server_app, debug=True)

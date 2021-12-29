@@ -1,53 +1,40 @@
-async function startGame() {
-    const data = {
-        "round_timer": 60*3
-    }
+let url = window.location.href
+url = url.substring(0, url.indexOf('/', url.indexOf('//') + 2))
 
-    const response = await fetch("/" + String(game_id), {
-      method: "POST",
-      body: JSON.stringify(data),
-      headers: {
-        "Content-Type": "application/json"
-      }
-    })
-}
+let ws = io.connect(url);
 
-async function sendAlive() {
-    const data = {
-        "player_name" : player_name,
-        "game_id" : game_id,
-        "status" : "active"
-    }
-  
-    const response = await fetch("/" + String(game_id), {
-      method: "POST",
-      body: JSON.stringify(data),
-      headers: {
-        "Content-Type": "application/json"
-      }
-    })
-}
+ws.on("connect", () => {});
 
-async function recieveJson(response) {
-    if(response.ok) {
-        let json = await response.json();
-        console.log(json.board);
-        if(json.board) {
-            let r = 0
-            let c = 0
-            for(let row of json.board) {
-                for(let square of row) {
-                    console.log(String(r) + "," + String(c));
-                    let el = document.getElementById(String(r) + "," + String(c));
-                    el.innerHTML = square;
-                    c += 1
-                }
-                c = 0
-                r += 1
-            }
+// handle the event sent with ws.send()
+ws.on("message", data => {
+    console.log(data);
+});
+
+ws.on('player_list', plist => {
+    document.getElementById('player_list').innerHTML = "";
+    for(let p of plist) {
+        if(p === player_name){
+            document.getElementById('player_list').innerHTML += ('<li><b>' + p + '</b></li>');
+        } else {
+            document.getElementById('player_list').innerHTML += ('<li>' + p + '</li>');
         }
     }
-}
+});
 
-sendAlive();
-setInterval(sendAlive, 3000);
+ws.on('game_board', grid => {
+    let board_tbody = document.getElementById('game_board')
+    board_tbody.innerHTML = ""
+    for(let row in grid) {
+        let tr = board_tbody.insertRow();
+        for(let col in grid[row]) {
+            // square = document.getElementById(String(row) + ',' + String(col));
+            // square.innerHTML = grid[row][col];
+            let cell = tr.insertCell();
+            cell.innerHTML = grid[row][col];
+        }
+    }
+});
+
+async function startGame() {
+    ws.emit('start_game', {});
+}

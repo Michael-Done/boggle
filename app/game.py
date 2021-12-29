@@ -36,11 +36,6 @@ class Game:
 
     def touch(self):
         self.time_touched = datetime.now()
-        for p in dict(self.player_list).keys():
-            age_seconds = (self.time_touched - self.player_list[p].time_touched).total_seconds()
-            print("player", p, age_seconds)
-            if age_seconds > PLAYER_TIMEOUT:
-                self.player_list.pop(p)
 
     def add_player(self, player_name):
         if player_name in self.player_list:
