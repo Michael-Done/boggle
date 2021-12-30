@@ -17,11 +17,43 @@
             <td>
                 <div id='left_area' class='left_area'>
                     <div id='settings_area'>
-
+                        <h3 style='text-align: center;'> <u>Settings</u> </h3>
+                        <table id='settings' class='settings'>
+                            <tr>
+                                <td style='text-align: right;'><label>Round Timer: </label></td>
+                                <td><select id='round_timer'>
+                                    <option value=60>  1:00 </option>
+                                    <option value=90>  1:30 </option>
+                                    <option value=120> 2:00 </option>
+                                    <option value=150> 2:30 </option>
+                                    <option value=180 selected=true> 3:00 </option>
+                                    <option value=210> 3:30 </option>
+                                    <option value=240> 4:00 </option>
+                                    <option value=270> 4:30 </option>
+                                    <option value=300> 5:00 </option>
+                                </select></td>
+                            </tr>
+                            <tr>
+                                <td style='text-align: right;'><label>Board Size: </label></td>
+                                <td><select id='board_size'>
+                                    <option value=4>  4x4 </option>
+                                    <option value=5>  5x5 </option>
+                                </select></td>
+                            </tr>
+                            <tr>
+                                <td style='text-align: right;'><label>Minimum Word Length: </label></td>
+                                <td><select id='word_length'>
+                                    <option value=2> 2 </option>
+                                    <option value=3 selected=true> 3 </option>
+                                    <option value=4> 4 </option>
+                                    <option value=5> 5 </option>
+                                </select></td>
+                            </tr>
+                        </table>
                     </div>
                     <div id='player_list_area'>
-                        <h3>Players:</h3>
-                        <ul id='player_list'>
+                        <h3 style='text-align: center;'><u>Players</u></h3>
+                        <ul id='player_list' class='player_list'>
                             {% for p in players: %}
                                 {% if p == player: %}
                                     <li><b>{{ p }}</b></li>

@@ -3,7 +3,7 @@ from datetime import datetime
 import random
 from enum import Enum
 from .player import PLAYER_TIMEOUT, Player
-from .dice import dice
+from .dice import dice16
 
 GAME_TIMEOUT = 60*5 # Five minutes
 
@@ -58,11 +58,11 @@ class Game:
             ['?', '?', '?', '?'],
             ['?', '?', '?', '?']
         ]
-        random.shuffle(dice)
+        random.shuffle(dice16)
         die = 0
         for row in range(4):
             for col in range(4):
-                self.board[row][col] = dice[die][random.randint(0,5)]
+                self.board[row][col] = dice16[die][random.randint(0,5)]
                 die += 1
 
     @staticmethod
