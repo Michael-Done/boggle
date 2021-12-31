@@ -94,6 +94,9 @@ def on_connect(param):
 
    join_room(game_id)
    server_socket.emit('player_list', list(game_instance.player_list.keys()), to=game_id)
+   server_socket.emit('settings', game_instance.settings)
+   if game_instance.state == GameState.ROUND_ACTIVE or game_instance.state == GameState.ROUND_END:
+      server_socket.emit('game_board', game_instance.board, to=game_id)
    print('Player', player, 'connected to', game_id)
 
 @server_socket.on('disconnect')
@@ -119,7 +122,7 @@ def on_disconnect():
    print("Player", player, "disconnected from", game_id)
 
 @server_socket.on('start_game')
-def start_game(game_settings):
+def start_game():
    player = session[PNAME_KEY]
    game_id = session[GAMEID_KEY]
 
@@ -132,6 +135,65 @@ def start_game(game_settings):
    game_instance.new_round()
    server_socket.emit('game_board', game_instance.board, to=game_id)
 
+@server_socket.on('set_settings')
+def set_setting(settings):
+   player = session[PNAME_KEY]
+   game_id = session[GAMEID_KEY]
+
+   if game_id not in coordinator.game_list:
+      print('Error, game', game_id, 'does not exits')
+      send('Error, game ' + game_id + ' does not exits')
+      return
+
+   game_instance = coordinator.game_list[game_id]
+
+   if 'round_timer' in settings:
+      game_instance.settings['round_timer'] = int(settings['round_timer'])
+   if 'board_size' in settings:
+      game_instance.settings['board_size'] = int(settings['board_size'])
+   if 'word_length' in settings:
+      game_instance.settings['word_length'] = int(settings['word_length'])
+
+   server_socket.emit('settings', game_instance.settings)
+
+@server_socket.on('ping_game')
+def ping_game():
+   player = session[PNAME_KEY]
+   game_id = session[GAMEID_KEY]
+
+   if game_id not in coordinator.game_list:
+      print('Error, game', game_id, 'does not exits')
+      send('Error, game ' + game_id + ' does not exits')
+      return
+
+   game_instance = coordinator.game_list[game_id]
+   game_instance.ping()
+
+   server_socket.emit('timer', game_instance.get_time())
+   if coordinator.game_list[game_id].state == GameState.ROUND_END:
+      server_socket.emit('end_round', to=game_id)
+
+@server_socket.on('add_word')
+def add_word(word):
+   player = session[PNAME_KEY]
+   game_id = session[GAMEID_KEY]
+
+   if game_id not in coordinator.game_list:
+      print('Error, game', game_id, 'does not exits')
+      send('Error, game ' + game_id + ' does not exits')
+      return
+
+   game_instance = coordinator.game_list[game_id]
+   game_instance.touch()
+
+   if player not in game_instance.player_list:
+      print('Error, player', player, 'is not in game', game_id)
+      send('Error, player ' + player + ' is not in game ' + game_id)
+      return
+
+   p = game_instance.player_list[player]
+   p.add_word(word, game_instance.settings['word_length'])
+   server_socket.emit('timer', game_instance.get_time())
 
 if __name__ == '__main__':
    server_socket.run(server_app, debug=True)

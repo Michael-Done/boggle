@@ -3,7 +3,7 @@ from datetime import datetime
 import random
 from enum import Enum
 from .player import PLAYER_TIMEOUT, Player
-from .dice import dice16
+from .dice import dice16, dice25
 
 GAME_TIMEOUT = 60*5 # Five minutes
 
@@ -17,11 +17,19 @@ class GameState(Enum):
 class Game:
     def __init__(self, game_id):
         self.player_list = {}
+
+        self.settings = {
+            'board_size': 4,
+            'word_length': 3,
+            'round_timer': 60*3
+        }
+
         self.id = game_id
-        self.state = GameState.SETUP
+        self.state = GameState.ROUND_START
+
         self.time_created = datetime.now()
-        self.round_timer = 60*3 # 3 minutes
         self.touch()
+
         print("Game", self.id, "created at", self.time_created)
     
     def get_state(self):
@@ -44,26 +52,46 @@ class Game:
             self.player_list[player_name] = Player(player_name)
             return self.player_list[player_name]
 
-    def get_player_by_ip(self, player_ip):
-        for player in self.player_list:
-            if self.player_list[player].ip == player_ip:
-                return player
-        return None
-
     def new_round(self):
         self.touch()
-        self.board = [
-            ['?', '?', '?', '?'],
-            ['?', '?', '?', '?'],
-            ['?', '?', '?', '?'],
-            ['?', '?', '?', '?']
-        ]
-        random.shuffle(dice16)
+        self.board = []
+        dice = []
+        if self.settings['board_size'] == 4:
+            random.shuffle(dice16)
+            dice = dice16
+        elif self.settings['board_size'] == 5:
+            random.shuffle(dice25)
+            dice = dice25
         die = 0
-        for row in range(4):
-            for col in range(4):
-                self.board[row][col] = dice16[die][random.randint(0,5)]
+        for row in range(self.settings['board_size']):
+            self.board.append([])
+            for col in range(self.settings['board_size']):
+                self.board[row].append('?')
+                self.board[row][col] = dice[die][random.randint(0,5)]
                 die += 1
+        self.state = GameState.ROUND_START
+
+    def start_round(self):
+        self.state = GameState.ROUND_ACTIVE
+        self.time_started = datetime.now()
+
+    def end_round(self):
+        self.state = GameState.ROUND_END
+
+    def ping(self):
+        delta = (datetime.now() - self.time_started).total_seconds()
+        if delta >= self.settings['round_timer']:
+            self.end_round()
+
+    def get_time(self):
+        time = self.settings['round_timer']
+
+        if self.state == GameState.ROUND_ACTIVE:
+            time -= (datetime.now() - self.time_started).total_seconds()
+        elif self.state == GameState.ROUND_END:
+            time = 0
+
+        return (str(time/60) + ':' + '{n:02}'.format(time % 60))
 
     @staticmethod
     def __score(self, letter_count):

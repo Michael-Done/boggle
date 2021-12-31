@@ -6,6 +6,14 @@
     --area-bg-col: #F0F0F0;
     --text-col: #000000;
 }
+
+.game_area {
+    margin: auto;
+    width: 70%;
+    height: 100vh;
+    overflow: hidden;
+}
+
 body {
     font-family: 'Quicksand';
     background-color: var(--main-bg-col);
@@ -25,38 +33,34 @@ body {
     padding-right: 5%;
 }
 
+.board_area {
+    width: 300px;
+    height: 300px;
+    padding: 15px;
+    border-radius: 5%;
+    background-color: cornflowerblue;
+    margin: auto;
+    overflow: hidden;
+}
+
 .game_board {
     table-layout: fixed;
     width: 100%;
     height: 100%;
 }
-.board_row {
+
+.game_board tr {
     position: relative;
-}
-.board_cell {
-    position: relative;
-    text-align: center;
-    background-color: cornflowerblue;
-    font-family: 'Quicksand';
-    font-size: 30pt;
-}
-.board_cell:after {
-    content: '';
-    display: block;
-}
-.board_cell .content {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
 }
 
-.game_area {
-    margin: auto;
-    width: 70%;
-    height: 100vh;
-    overflow: hidden;
+.game_board td {
+    position: relative;
+    text-align: center;
+    background-color: ivory;
+    border-radius: 10%;
+    font-family: 'Quicksand';
+    font-size: 30pt;
+    font-weight: 700;
 }
 
 .left_area {
@@ -69,22 +73,24 @@ body {
 }
 
 .settings {
+    table-layout: fixed;
     margin-left: auto;
     margin-right: auto;
 }
 
-.board_area {
-    background-color: var(--area-bg-col);
-    width: 300px;
-    height: 300px;
-    background-color: aquamarine;
-    margin: auto;
-    overflow: hidden;
+.settings td {
+    width: 50%;
 }
-
 .right_area {
     background-color: var(--area-bg-col);
     height: 50%;
     margin: auto;
     overflow: hidden;
+    text-align: center;
+}
+
+.player_text_input {
+    margin-top: 10px;
+    margin-left: auto;
+    margin-right: auto;
 }

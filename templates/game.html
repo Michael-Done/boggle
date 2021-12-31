@@ -16,12 +16,12 @@
         <table id='game_area' class='game_area'> <tr>
             <td>
                 <div id='left_area' class='left_area'>
-                    <div id='settings_area'>
+                    <div id='settings_area' style='text-align: center;'>
                         <h3 style='text-align: center;'> <u>Settings</u> </h3>
                         <table id='settings' class='settings'>
                             <tr>
                                 <td style='text-align: right;'><label>Round Timer: </label></td>
-                                <td><select id='round_timer'>
+                                <td><select id='round_timer' onchange='changeSettings();'>
                                     <option value=60>  1:00 </option>
                                     <option value=90>  1:30 </option>
                                     <option value=120> 2:00 </option>
@@ -35,14 +35,14 @@
                             </tr>
                             <tr>
                                 <td style='text-align: right;'><label>Board Size: </label></td>
-                                <td><select id='board_size'>
+                                <td><select id='board_size' onchange='changeSettings();'>
                                     <option value=4>  4x4 </option>
                                     <option value=5>  5x5 </option>
                                 </select></td>
                             </tr>
                             <tr>
                                 <td style='text-align: right;'><label>Minimum Word Length: </label></td>
-                                <td><select id='word_length'>
+                                <td><select id='word_length' onchange='changeSettings();'>
                                     <option value=2> 2 </option>
                                     <option value=3 selected=true> 3 </option>
                                     <option value=4> 4 </option>
@@ -50,6 +50,7 @@
                                 </select></td>
                             </tr>
                         </table>
+                        <button class='pure-button' onclick="startGame();">Start Round</button>
                     </div>
                     <div id='player_list_area'>
                         <h3 style='text-align: center;'><u>Players</u></h3>
@@ -74,7 +75,8 @@
             </td>
             <td>
                 <div id='right_area' class='right_area'>
-                    <button class='pure-button' onclick="startGame();">START</button>
+                    <h3 style='text-align: center;'> <u>Words</u> </h3>
+                    <input type="text" id='player_text_input' class='player_text_input' onkeypress='submitWord(event);'>
                 </div>
             </td>
         </tr></table>

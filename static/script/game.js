@@ -35,6 +35,28 @@ ws.on('game_board', grid => {
     }
 });
 
-async function startGame() {
-    ws.emit('start_game', {});
+ws.on('settings', settings => {
+    document.getElementById('round_timer').value = settings['round_timer'];
+    document.getElementById('board_size').value = settings['board_size'];
+    document.getElementById('word_length').value = settings['word_length'];
+});
+
+function changeSettings() {
+    let settings = {
+        'round_timer' : document.getElementById('round_timer').value,
+        'board_size' : document.getElementById('board_size').value,
+        'word_length' : document.getElementById('word_length').value
+    }
+    ws.emit('set_settings', settings);
+}
+
+function startGame() {
+    ws.emit('start_game');
+}
+
+function submitWord(event) {
+    if (event.keyCode == 13) {
+        field = document.getElementById('player_text_input')
+        ws.emit('add_word', field.value)
+    }
 }
