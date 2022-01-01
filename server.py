@@ -95,8 +95,11 @@ def on_connect(param):
    join_room(game_id)
    server_socket.emit('player_list', list(game_instance.player_list.keys()), to=game_id)
    server_socket.emit('settings', game_instance.settings)
+
    if game_instance.state == GameState.ROUND_ACTIVE or game_instance.state == GameState.ROUND_END:
       server_socket.emit('game_board', game_instance.board, to=game_id)
+   if game_instance.state == GameState.ROUND_ACTIVE:
+      emit('start_round')
    print('Player', player, 'connected to', game_id)
 
 @server_socket.on('disconnect')
@@ -133,7 +136,9 @@ def start_game():
 
    game_instance = coordinator.game_list[game_id]
    game_instance.new_round()
+   game_instance.start_round()
    server_socket.emit('game_board', game_instance.board, to=game_id)
+   server_socket.emit('start_round', to=game_id)
 
 @server_socket.on('set_settings')
 def set_setting(settings):
@@ -170,6 +175,7 @@ def ping_game():
    game_instance.ping()
 
    server_socket.emit('timer', game_instance.get_time())
+
    if coordinator.game_list[game_id].state == GameState.ROUND_END:
       server_socket.emit('end_round', to=game_id)
 
@@ -191,9 +197,18 @@ def add_word(word):
       send('Error, player ' + player + ' is not in game ' + game_id)
       return
 
-   p = game_instance.player_list[player]
-   p.add_word(word, game_instance.settings['word_length'])
-   server_socket.emit('timer', game_instance.get_time())
+   if game_instance.state == GameState.ROUND_ACTIVE:
+      p = game_instance.player_list[player]
+      status = game_instance.add_word(player, word)
+
+      if status == WordState.TOO_SHORT:
+         emit('invalid_word', word + ' is too short')
+      elif status == WordState.NOT_A_WORD:
+         emit('invalid_word', word + ' is not a word')
+      elif status == WordState.VALID:
+         emit('word_list', p.words)
+
+      server_socket.emit('timer', game_instance.get_time())
 
 if __name__ == '__main__':
    server_socket.run(server_app, debug=True)

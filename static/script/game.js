@@ -2,6 +2,7 @@ let url = window.location.href
 url = url.substring(0, url.indexOf('/', url.indexOf('//') + 2))
 
 let ws = io.connect(url);
+let pingID;
 
 ws.on("connect", () => {});
 
@@ -41,6 +42,75 @@ ws.on('settings', settings => {
     document.getElementById('word_length').value = settings['word_length'];
 });
 
+ws.on('start_round', () => {
+    pingID = setInterval(function(){ws.emit('ping_game')}, 500);
+    disableSettings(true);
+
+    document.getElementById('player_text_input').disabled = false;
+    document.getElementById('player_text_input').focus();
+    document.getElementById('player_text_input').select();
+});
+
+ws.on('end_round', () => {
+    clearInterval(pingID);
+    disableSettings(false);
+    document.getElementById('player_text_input').disabled = true;
+});
+
+ws.on('timer', time => {
+    document.getElementById('timer').innerHTML = time;
+});
+
+ws.on('invalid_word', msg => {
+    setWordMsg(msg);
+});
+
+ws.on('word_list', words => {
+    word_list = document.getElementById('word_list');
+    word_list.innerHTML = "";
+
+    for(let word of words) {
+        word_list.innerHTML += ('<li>' + word + '</li>');
+    }
+})
+
+function submitWord(event) {
+    if (event.keyCode == 13) {
+        field = document.getElementById('player_text_input')
+        ws.emit('add_word', field.value)
+        field.value = "";
+    }
+}
+
+function formatInput() {
+    field = document.getElementById("player_text_input");
+    field.value = field.value.trim().toLowerCase();
+}
+
+let word_msg_opacity = 1;
+let word_msg_timer;
+function setWordMsg(msg) {
+    let element = document.getElementById('word_msg')
+    element.innerHTML = msg
+    word_msg_opacity = 1;  // initial opacity
+    clearInterval(word_msg_timer);
+    word_msg_timer = setInterval(function () {
+        if (word_msg_opacity <= 0.1){
+            clearInterval(word_msg_timer);
+        }
+        element.style.opacity = word_msg_opacity;
+        element.style.filter = 'alpha(opacity=' + word_msg_opacity * 100 + ")";
+        word_msg_opacity -= word_msg_opacity * 0.1;
+    }, 150);
+}
+
+function disableSettings(disabled) {
+    document.getElementById('round_timer').disabled = disabled;
+    document.getElementById('board_size').disabled = disabled;
+    document.getElementById('word_length').disabled = disabled;
+    document.getElementById('start_button').disabled = disabled;
+}
+
 function changeSettings() {
     let settings = {
         'round_timer' : document.getElementById('round_timer').value,
@@ -52,11 +122,4 @@ function changeSettings() {
 
 function startGame() {
     ws.emit('start_game');
-}
-
-function submitWord(event) {
-    if (event.keyCode == 13) {
-        field = document.getElementById('player_text_input')
-        ws.emit('add_word', field.value)
-    }
 }

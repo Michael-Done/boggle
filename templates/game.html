@@ -50,7 +50,7 @@
                                 </select></td>
                             </tr>
                         </table>
-                        <button class='pure-button' onclick="startGame();">Start Round</button>
+                        <button id='start_button' class='pure-button' onclick="startGame();">Start Round</button>
                     </div>
                     <div id='player_list_area'>
                         <h3 style='text-align: center;'><u>Players</u></h3>
@@ -75,8 +75,14 @@
             </td>
             <td>
                 <div id='right_area' class='right_area'>
-                    <h3 style='text-align: center;'> <u>Words</u> </h3>
-                    <input type="text" id='player_text_input' class='player_text_input' onkeypress='submitWord(event);'>
+                    <div id='timer' class='timer'>
+                        3:00
+                    </div>
+                    <h3> <u>Words</u> </h3>
+                    <ul id='word_list' class='word_list'></ul>
+                    <input type="text" id='player_text_input' class='player_text_input' 
+                        onkeyup='formatInput();' onkeypress='submitWord(event);'>
+                    <p id='word_msg' class='word_msg'></p>
                 </div>
             </td>
         </tr></table>

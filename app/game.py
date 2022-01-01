@@ -2,7 +2,9 @@
 from datetime import datetime
 import random
 from enum import Enum
-from .player import PLAYER_TIMEOUT, Player
+from math import floor
+import requests
+from .player import Player
 from .dice import dice16, dice25
 
 GAME_TIMEOUT = 60*5 # Five minutes
@@ -13,6 +15,10 @@ class GameState(Enum):
     ROUND_ACTIVE = 2
     ROUND_END = 3
 
+class WordState(Enum):
+    VALID = 0
+    TOO_SHORT = 1
+    NOT_A_WORD = 2
 
 class Game:
     def __init__(self, game_id):
@@ -21,9 +27,15 @@ class Game:
         self.settings = {
             'board_size': 4,
             'word_length': 3,
-            'round_timer': 60*3
+            'round_timer': 60*3,
+            'accepted_types': [
+                'noun',
+                'verb',
+                'adjective',
+                'adverb'
+            ]
         }
-
+        
         self.id = game_id
         self.state = GameState.ROUND_START
 
@@ -52,6 +64,28 @@ class Game:
             self.player_list[player_name] = Player(player_name)
             return self.player_list[player_name]
 
+    def add_word(self, player_name, word):
+        word = word.strip().lower()
+
+        if len(word) < self.settings['word_length']:
+            return WordState.TOO_SHORT
+
+        resp = requests.get('https://api.dictionaryapi.dev/api/v2/entries/en/' + word).json()
+        print(resp)
+
+        if 'title' in resp and resp['title'] == 'No Definitions Found':
+            return WordState.NOT_A_WORD
+        
+        for w in resp:
+            if w['word'] == word:
+                meanings = w['meanings']
+                for m in meanings:
+                    if m['partOfSpeech'] in self.settings['accepted_types']:
+                        self.player_list[player_name].add_word(word)
+                        return WordState.VALID
+
+        return WordState.NOT_A_WORD
+
     def new_round(self):
         self.touch()
         self.board = []
@@ -72,10 +106,12 @@ class Game:
         self.state = GameState.ROUND_START
 
     def start_round(self):
+        print(self.id + ': Round started')
         self.state = GameState.ROUND_ACTIVE
         self.time_started = datetime.now()
 
     def end_round(self):
+        print(self.id + ': Round ended')
         self.state = GameState.ROUND_END
 
     def ping(self):
@@ -91,7 +127,8 @@ class Game:
         elif self.state == GameState.ROUND_END:
             time = 0
 
-        return (str(time/60) + ':' + '{n:02}'.format(time % 60))
+        sec = floor(time % 60)
+        return (str(floor(time/60)) + ':' + f'{sec:02}')
 
     @staticmethod
     def __score(self, letter_count):

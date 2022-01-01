@@ -14,7 +14,6 @@ class GameCoordinator:
             new_game_id = GameCoordinator.__generate_game_id()
 
         self.game_list[new_game_id] = Game(new_game_id)
-        print(list(self.game_list.keys()))
         return new_game_id
 
     def flush_inactive_games(self):
